@@ -1,0 +1,57 @@
+export type MediaType = 'Anime' | 'Drama' | 'Game' | 'Novel' | 'Idol' | 'Webtoon' | 'Other';
+
+export interface Character {
+  id: string;
+  name: string;
+  isCanon: boolean;             // 원작 캐릭터 여부
+  personality: string[];        // 성격 키워드
+  speechPatterns: string[];     // 말투 예시
+  relationships: Relationship[];
+  description?: string;
+}
+
+export interface Relationship {
+  targetCharacterId: string;
+  description: string;
+}
+
+export interface OriginalWork {
+  id: string;
+  title: string;
+  mediaType: MediaType;
+  canonCharacters: Character[]; // 원작 캐릭터
+  worldRules: string[];         // 세계관 규칙
+  source?: string;
+}
+
+export interface Foreshadow {
+  id: string;
+  projectId: string;
+  title: string;
+  description: string;
+  status: 'Pending' | 'InProgress' | 'Resolved' | 'Dropped';
+  plantedAt?: string; // 화수 또는 챕터
+  expectedPayoff?: string;
+}
+
+export interface ToneProfile {
+  writingStyle: string; // 문체
+  atmosphere: string;   // 분위기
+  pacing: string;       // 템포
+  dialogueRatio: number; // 대사 비중 (0-100)
+  rating: 'All' | '15+' | '19+';
+}
+
+export interface FanficProject {
+  id: string;
+  title: string;
+  originalWorkId: string;       // 선택한 원작
+  timelineSetting: string;      // 시점 (예: 엔딩 이후)
+  auSettings: string[];         // AU 설정
+  activeCharacterIds: string[]; // 이 프로젝트에 등장하는 캐릭터 ID 목록
+  customCharacters: Character[]; // 오리지널 캐릭터
+  foreshadows: Foreshadow[];    // 복선 목록
+  tone: ToneProfile;            // 톤 설정
+  createdAt: string;
+  updatedAt: string;
+}
