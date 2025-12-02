@@ -9,6 +9,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { PromptGenerator } from '@/components/prompt/prompt-generator';
 import { EpisodeList } from '@/components/episode/episode-list';
 import { EpisodeBoard } from '@/components/episode/episode-board';
+import { ProjectSettingsDialog } from '@/components/project/project-settings-dialog';
 import { FanficProject, Episode } from '@/lib/types';
 
 export default function ProjectWorkspacePage() {
@@ -80,9 +81,7 @@ export default function ProjectWorkspacePage() {
                         </p>
                     </div>
                 </div>
-                <Button variant="outline" size="sm">
-                    <Settings className="mr-2 h-4 w-4" /> 설정
-                </Button>
+                <ProjectSettingsDialog project={project} onUpdate={fetchProject} />
             </header>
 
             {/* Main Content */}
