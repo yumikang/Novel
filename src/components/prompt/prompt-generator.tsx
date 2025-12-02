@@ -29,16 +29,22 @@ export function PromptGenerator({ project }: PromptGeneratorProps) {
         const worldRules = originalWork.worldRules || [];
         const worldRuleDesc = worldRules.map(r => `- ${r.title}: ${r.description}`).join('\n');
 
-        const charDescriptions = characters.map(c => {
-            let desc = `- ${c.name} (${c.isCanon ? '원작 캐릭터' : '오리지널 캐릭터'})`;
-            if (c.description) desc += `\n  * 설명: ${c.description}`;
-            if (c.personality && c.personality.length > 0) desc += `\n  * 성격: ${c.personality.join(', ')}`;
-            if (c.appearance && c.appearance.length > 0) desc += `\n  * 외모: ${c.appearance.join(', ')}`;
-            if (c.abilities && c.abilities.length > 0) desc += `\n  * 능력: ${c.abilities.join(', ')}`;
-            if (c.speechPatterns && c.speechPatterns.length > 0) desc += `\n  * 말투: ${c.speechPatterns.join(', ')}`;
-            if (c.relationships && c.relationships.length > 0) desc += `\n  * 관계: ${c.relationships.join(', ')}`;
-            return desc;
-        }).join('\n\n');
+        const charDescriptions = characters.length > 0
+            ? characters.map(c => {
+                let desc = `- ${c.name} (${c.isCanon ? '원작 캐릭터' : '오리지널 캐릭터'})`;
+                if (c.description) desc += `\n  * 설명: ${c.description}`;
+                if (c.personality && c.personality.length > 0) desc += `\n  * 성격: ${c.personality.join(', ')}`;
+                if (c.appearance && c.appearance.length > 0) desc += `\n  * 외모: ${c.appearance.join(', ')}`;
+                if (c.abilities && c.abilities.length > 0) desc += `\n  * 능력: ${c.abilities.join(', ')}`;
+                if (c.speechPatterns && c.speechPatterns.length > 0) desc += `\n  * 말투: ${c.speechPatterns.join(', ')}`;
+                if (c.relationships && c.relationships.length > 0) desc += `\n  * 관계: ${c.relationships.join(', ')}`;
+                return desc;
+            }).join('\n\n')
+            : `(등록된 캐릭터가 없습니다. 원작 '${originalWork.title}'의 캐릭터 기본 성격을 참고해주세요.)`;
+
+        const toneDesc = (project.tone && project.tone.writingStyle !== 'Normal')
+            ? `문체: ${project.tone.writingStyle}, 분위기: ${project.tone.atmosphere}`
+            : `(미설정 - 현재 상황 텍스트의 분위기를 참고해주세요)`;
 
         const prompt = `
 # 역할
@@ -48,9 +54,9 @@ export function PromptGenerator({ project }: PromptGeneratorProps) {
 # 작품 설정
 - 원작: ${originalWork.title}
 - 매체: ${originalWork.mediaType}
-- 시점: ${project.timelineSetting}
+- 팬픽 시점(Timeline): ${project.timelineSetting}
 - AU 설정: ${project.auSettings.join(', ') || '없음'}
-- 톤앤매너: ${project.tone ? `문체: ${project.tone.writingStyle}, 분위기: ${project.tone.atmosphere}` : '기본'}
+- 톤앤매너: ${toneDesc}
 
 # 세계관 및 주요 설정
 ${worldRuleDesc || '특별한 세계관 설정 없음'}
