@@ -9,7 +9,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Textarea } from '@/components/ui/textarea';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 // import { getAllOriginalWorks } from '@/lib/store'; // Removed
-import { saveProject } from '@/lib/store';
+// import { saveProject } from '@/lib/store'; // Removed
 import { FanficProject, OriginalWork, ToneProfile } from '@/lib/types';
 
 export function CreateProjectForm() {
@@ -41,31 +41,41 @@ export function CreateProjectForm() {
 
     const selectedWork = availableWorks.find(w => w.id === originalWorkId);
 
-    const handleCreate = () => {
+    const handleCreate = async () => {
         if (!title || !originalWorkId) return;
 
-        const newProject: FanficProject = {
-            id: crypto.randomUUID(),
+        const newProject = {
             title,
             originalWorkId,
             timelineSetting: timeline,
             auSettings: auSettings.split(',').map(s => s.trim()).filter(Boolean),
             activeCharacterIds: selectedCharacters,
-            customCharacters: [],
-            foreshadows: [],
             tone: {
                 writingStyle: 'Normal',
                 atmosphere: 'Normal',
                 pacing: 'Normal',
                 dialogueRatio: 50,
                 rating: 'All'
-            },
-            createdAt: new Date().toISOString(),
-            updatedAt: new Date().toISOString()
+            }
         };
 
-        saveProject(newProject);
-        router.push(`/projects/${newProject.id}`);
+        try {
+            const res = await fetch('/api/projects', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(newProject),
+            });
+
+            if (res.ok) {
+                const createdProject = await res.json();
+                router.push(`/projects/${createdProject.id}`);
+            } else {
+                alert('프로젝트 생성에 실패했습니다.');
+            }
+        } catch (e) {
+            console.error(e);
+            alert('오류가 발생했습니다.');
+        }
     };
 
     const toggleCharacter = (id: string) => {

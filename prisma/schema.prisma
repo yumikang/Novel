@@ -1,94 +1,99 @@
-// This is your Prisma schema file,
-// learn more about it in the docs: https://pris.ly/d/prisma-schema
-
 generator client {
   provider = "prisma-client-js"
 }
 
 datasource db {
   provider = "postgresql"
+  url      = env("DATABASE_URL")
 }
 
 model OriginalWork {
   id              String      @id @default(uuid())
   title           String
   mediaType       String
-  source          String      @default("Custom") // 'Preset' | 'Custom'
-  
-  canonCharacters Character[] @relation("OriginalWorkCharacters")
-  worldRules      WorldRule[]
-  projects        Project[]
-
+  source          String      @default("Custom")
   createdAt       DateTime    @default(now())
   updatedAt       DateTime    @updatedAt
+  canonCharacters Character[] @relation("OriginalWorkCharacters")
+  projects        Project[]
+  worldRules      WorldRule[]
 }
 
 model Character {
-  id              String   @id @default(uuid())
-  name            String
-  isCanon         Boolean  @default(true)
-  description     String?
-  
-  personality     String[]
-  appearance      String[]
-  abilities       String[]
-  speechPatterns  String[]
-  relationships   Json?    // Relationship[]
-
-  // Relations
-  originalWorkId  String?
-  originalWork    OriginalWork? @relation("OriginalWorkCharacters", fields: [originalWorkId], references: [id], onDelete: Cascade)
-
-  projectId       String?
-  project         Project?      @relation("ProjectCustomCharacters", fields: [projectId], references: [id], onDelete: Cascade)
-
-  createdAt       DateTime @default(now())
-  updatedAt       DateTime @updatedAt
+  id             String        @id @default(uuid())
+  name           String
+  isCanon        Boolean       @default(true)
+  description    String?
+  personality    String[]
+  appearance     String[]
+  abilities      String[]
+  speechPatterns String[]
+  relationships  Json?
+  originalWorkId String?
+  projectId      String?
+  createdAt      DateTime      @default(now())
+  updatedAt      DateTime      @updatedAt
+  originalWork   OriginalWork? @relation("OriginalWorkCharacters", fields: [originalWorkId], references: [id], onDelete: Cascade)
+  project        Project?      @relation("ProjectCustomCharacters", fields: [projectId], references: [id], onDelete: Cascade)
 }
 
 model WorldRule {
-  id              String       @id @default(uuid())
-  title           String
-  description     String
-  
-  originalWorkId  String
-  originalWork    OriginalWork @relation(fields: [originalWorkId], references: [id], onDelete: Cascade)
-
-  createdAt       DateTime     @default(now())
-  updatedAt       DateTime     @updatedAt
+  id             String       @id @default(uuid())
+  title          String
+  description    String
+  originalWorkId String
+  createdAt      DateTime     @default(now())
+  updatedAt      DateTime     @updatedAt
+  originalWork   OriginalWork @relation(fields: [originalWorkId], references: [id], onDelete: Cascade)
 }
 
 model Project {
   id                 String       @id @default(uuid())
   title              String
-  
   originalWorkId     String
-  originalWork       OriginalWork @relation(fields: [originalWorkId], references: [id])
-
   timelineSetting    String
   auSettings         String[]
-  activeCharacterIds String[]     // List of character IDs used in this project
-  
-  customCharacters   Character[]  @relation("ProjectCustomCharacters")
-  foreshadows        Foreshadow[]
-  
-  tone               Json         // ToneProfile
-  
+  activeCharacterIds String[]
+  tone               Json
   createdAt          DateTime     @default(now())
   updatedAt          DateTime     @updatedAt
+  customCharacters   Character[]  @relation("ProjectCustomCharacters")
+  foreshadows        Foreshadow[]
+  episodes           Episode[]
+  originalWork       OriginalWork @relation(fields: [originalWorkId], references: [id])
 }
 
 model Foreshadow {
   id             String   @id @default(uuid())
   title          String
   description    String
-  status         String   // 'Pending' | 'InProgress' | 'Resolved' | 'Dropped'
+  status         String
   plantedAt      String?
   expectedPayoff String?
-
   projectId      String
-  project        Project  @relation(fields: [projectId], references: [id], onDelete: Cascade)
-
   createdAt      DateTime @default(now())
   updatedAt      DateTime @updatedAt
+  project        Project  @relation(fields: [projectId], references: [id], onDelete: Cascade)
+}
+
+model Episode {
+  id        String   @id @default(uuid())
+  title     String
+  order     Int      @default(0)
+  projectId String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  project   Project  @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  notes     EpisodeNote[]
+}
+
+model EpisodeNote {
+  id        String   @id @default(uuid())
+  content   String
+  type      String   @default("General") // 'General', 'Dialogue', 'Plot', 'Draft'
+  order     Int      @default(0)
+  episodeId String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  episode   Episode  @relation(fields: [episodeId], references: [id], onDelete: Cascade)
 }

@@ -60,6 +60,27 @@ export interface FanficProject {
   customCharacters: Character[]; // 오리지널 캐릭터
   foreshadows: Foreshadow[];    // 복선 목록
   tone: ToneProfile;            // 톤 설정
+  originalWork?: OriginalWork;  // API response includes this
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface EpisodeNote {
+  id: string;
+  content: string;
+  type: string; // 'General', 'Dialogue', 'Plot', 'Draft'
+  order: number;
+  episodeId: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface Episode {
+  id: string;
+  title: string;
+  order: number;
+  projectId: string;
+  notes: EpisodeNote[];
   createdAt: string;
   updatedAt: string;
 }

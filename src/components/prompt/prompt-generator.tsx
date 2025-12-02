@@ -8,7 +8,7 @@ import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { FanficProject, OriginalWork } from '@/lib/types';
-import { PRESET_ORIGINAL_WORKS } from '@/lib/constants';
+// import { PRESET_ORIGINAL_WORKS } from '@/lib/constants'; // Removed
 
 interface PromptGeneratorProps {
     project: FanficProject;
@@ -19,7 +19,7 @@ export function PromptGenerator({ project }: PromptGeneratorProps) {
     const [generatedPrompt, setGeneratedPrompt] = useState('');
     const [selectedActiveChars, setSelectedActiveChars] = useState<string[]>(project.activeCharacterIds);
 
-    const originalWork = PRESET_ORIGINAL_WORKS.find(w => w.id === project.originalWorkId);
+    const originalWork = project.originalWork;
 
     const handleGenerate = () => {
         if (!originalWork) return;

@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import { Plus, Trash2, ChevronDown, ChevronUp } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -20,6 +21,7 @@ export function CreateOriginalForm() {
 
     const [title, setTitle] = useState('');
     const [mediaType, setMediaType] = useState<MediaType>('Other');
+    const [worldView, setWorldView] = useState('');
     const [characters, setCharacters] = useState<Character[]>([]);
 
     const handleBulkImport = (newChars: Character[]) => {
@@ -38,7 +40,11 @@ export function CreateOriginalForm() {
             title,
             mediaType,
             canonCharacters: characters,
-            worldRules: [], // TODO: Add world rules input
+            worldRules: worldView ? [{
+                id: crypto.randomUUID(),
+                title: '기본 세계관',
+                description: worldView
+            }] : [],
             source: 'Custom'
         };
 
@@ -106,6 +112,17 @@ export function CreateOriginalForm() {
                                 </Button>
                             ))}
                         </div>
+                    </div>
+
+                    <div className="space-y-2">
+                        <Label htmlFor="worldView">세계관 (설정) 요약</Label>
+                        <Textarea
+                            id="worldView"
+                            placeholder="원작의 주요 세계관 설정이나 배경을 간단히 입력해주세요. (예: 마법이 존재하는 현대 사회, 계급 사회 등)"
+                            className="min-h-[100px]"
+                            value={worldView}
+                            onChange={(e) => setWorldView(e.target.value)}
+                        />
                     </div>
 
                     <div className="space-y-4 border rounded-md p-4 bg-slate-50">

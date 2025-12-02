@@ -7,7 +7,7 @@ import { Button } from '@/components/ui/button';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Separator } from '@/components/ui/separator';
 import { useEffect, useState } from 'react';
-import { getProjects } from '@/lib/store';
+// import { getProjects } from '@/lib/store'; // Removed
 import { FanficProject } from '@/lib/types';
 
 export function AppSidebar() {
@@ -17,10 +17,22 @@ export function AppSidebar() {
     // Simple way to refresh projects list. In a real app, use a proper store subscription or context.
     // For now, we'll just fetch on mount and rely on page navigation to refresh.
     useEffect(() => {
-        setProjects(getProjects());
+        const fetchProjects = async () => {
+            try {
+                const res = await fetch('/api/projects');
+                if (res.ok) {
+                    const data = await res.json();
+                    setProjects(data);
+                }
+            } catch (error) {
+                console.error('Failed to fetch projects:', error);
+            }
+        };
+
+        fetchProjects();
 
         // Listen for custom event to refresh sidebar
-        const handleRefresh = () => setProjects(getProjects());
+        const handleRefresh = fetchProjects;
         window.addEventListener('project-updated', handleRefresh);
         return () => window.removeEventListener('project-updated', handleRefresh);
     }, []);

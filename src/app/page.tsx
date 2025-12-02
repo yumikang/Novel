@@ -5,19 +5,30 @@ import Link from 'next/link';
 import { Plus } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
-import { getProjects } from '@/lib/store';
+// import { getProjects } from '@/lib/store'; // Removed
 import { FanficProject } from '@/lib/types';
-import { PRESET_ORIGINAL_WORKS } from '@/lib/constants';
+// import { PRESET_ORIGINAL_WORKS } from '@/lib/constants'; // Removed
 
 export default function Home() {
   const [projects, setProjects] = useState<FanficProject[]>([]);
 
   useEffect(() => {
-    setProjects(getProjects());
+    const fetchProjects = async () => {
+      try {
+        const res = await fetch('/api/projects');
+        if (res.ok) {
+          const data = await res.json();
+          setProjects(data);
+        }
+      } catch (error) {
+        console.error('Failed to fetch projects:', error);
+      }
+    };
+    fetchProjects();
   }, []);
 
-  const getOriginalWorkTitle = (id: string) => {
-    return PRESET_ORIGINAL_WORKS.find(w => w.id === id)?.title || id;
+  const getOriginalWorkTitle = (project: FanficProject) => {
+    return project.originalWork?.title || project.originalWorkId;
   };
 
   return (
@@ -49,7 +60,7 @@ export default function Home() {
               <Card className="hover:shadow-md transition-shadow cursor-pointer h-full">
                 <CardHeader>
                   <CardTitle>{project.title}</CardTitle>
-                  <CardDescription>{getOriginalWorkTitle(project.originalWorkId)}</CardDescription>
+                  <CardDescription>{getOriginalWorkTitle(project)}</CardDescription>
                 </CardHeader>
                 <CardContent>
                   <div className="flex flex-wrap gap-2">
