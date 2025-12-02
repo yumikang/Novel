@@ -8,7 +8,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { saveOriginalWork } from '@/lib/store';
+// import { saveOriginalWork } from '@/lib/store'; // Removed
 import { Character, MediaType, OriginalWork } from '@/lib/types';
 
 import { BulkCharacterImport } from '@/components/original/bulk-character-import';
@@ -30,7 +30,7 @@ export function CreateOriginalForm() {
         setCharacters(characters.filter(c => c.id !== id));
     };
 
-    const handleSave = () => {
+    const handleSave = async () => {
         if (!title) return;
 
         const newWork: OriginalWork = {
@@ -42,9 +42,24 @@ export function CreateOriginalForm() {
             source: 'Custom'
         };
 
-        saveOriginalWork(newWork);
-        alert('원작이 성공적으로 등록되었습니다.');
-        router.push('/originals');
+        try {
+            const res = await fetch('/api/originals', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(newWork),
+            });
+
+            if (res.ok) {
+                alert('원작이 성공적으로 등록되었습니다.');
+                window.dispatchEvent(new Event('original-work-updated')); // Notify list page
+                router.push('/originals');
+            } else {
+                alert('원작 등록에 실패했습니다.');
+            }
+        } catch (e) {
+            console.error(e);
+            alert('오류가 발생했습니다.');
+        }
     };
 
     const updateCharacter = (updatedChar: Character) => {

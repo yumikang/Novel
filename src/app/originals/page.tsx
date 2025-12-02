@@ -5,7 +5,7 @@ import Link from 'next/link';
 import { Plus, Trash2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
-import { getAllOriginalWorks, deleteOriginalWork } from '@/lib/store';
+// import { getAllOriginalWorks, deleteOriginalWork } from '@/lib/store'; // Removed
 import { OriginalWork } from '@/lib/types';
 import { CreateOriginalForm } from '@/components/original/create-original-form';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -14,11 +14,23 @@ export default function OriginalsPage() {
     const [works, setWorks] = useState<OriginalWork[]>([]);
 
     useEffect(() => {
-        const loadWorks = () => setWorks(getAllOriginalWorks());
-        loadWorks();
+        const fetchWorks = async () => {
+            try {
+                const res = await fetch('/api/originals');
+                if (res.ok) {
+                    const data = await res.json();
+                    setWorks(data);
+                }
+            } catch (error) {
+                console.error('Failed to fetch works:', error);
+            }
+        };
 
-        window.addEventListener('original-work-updated', loadWorks);
-        return () => window.removeEventListener('original-work-updated', loadWorks);
+        fetchWorks();
+
+        // Listen for updates to refresh list
+        window.addEventListener('original-work-updated', fetchWorks);
+        return () => window.removeEventListener('original-work-updated', fetchWorks);
     }, []);
 
     return (
@@ -68,11 +80,23 @@ export default function OriginalsPage() {
                                         variant="destructive"
                                         size="icon"
                                         className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity h-8 w-8"
-                                        onClick={(e) => {
+                                        onClick={async (e) => {
                                             e.preventDefault();
                                             e.stopPropagation();
                                             if (confirm('정말 이 원작을 삭제하시겠습니까?')) {
-                                                deleteOriginalWork(work.id);
+                                                try {
+                                                    const res = await fetch(`/api/originals/${work.id}`, {
+                                                        method: 'DELETE',
+                                                    });
+                                                    if (res.ok) {
+                                                        window.dispatchEvent(new Event('original-work-updated'));
+                                                    } else {
+                                                        alert('삭제에 실패했습니다.');
+                                                    }
+                                                } catch (e) {
+                                                    console.error(e);
+                                                    alert('삭제 중 오류가 발생했습니다.');
+                                                }
                                             }
                                         }}
                                     >

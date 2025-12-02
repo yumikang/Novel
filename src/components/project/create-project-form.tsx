@@ -8,7 +8,7 @@ import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
-import { getAllOriginalWorks } from '@/lib/store';
+// import { getAllOriginalWorks } from '@/lib/store'; // Removed
 import { saveProject } from '@/lib/store';
 import { FanficProject, OriginalWork, ToneProfile } from '@/lib/types';
 
@@ -18,7 +18,18 @@ export function CreateProjectForm() {
     const [availableWorks, setAvailableWorks] = useState<OriginalWork[]>([]);
 
     useEffect(() => {
-        setAvailableWorks(getAllOriginalWorks());
+        const fetchWorks = async () => {
+            try {
+                const res = await fetch('/api/originals');
+                if (res.ok) {
+                    const data = await res.json();
+                    setAvailableWorks(data);
+                }
+            } catch (error) {
+                console.error('Failed to fetch works:', error);
+            }
+        };
+        fetchWorks();
     }, []);
 
     // Form State

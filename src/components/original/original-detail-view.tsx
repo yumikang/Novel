@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { OriginalWork, Character, WorldRule } from '@/lib/types';
-import { saveOriginalWork } from '@/lib/store';
+// import { saveOriginalWork } from '@/lib/store'; // Removed
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { ArrowLeft, Users, Globe } from 'lucide-react';
@@ -27,9 +27,24 @@ export function OriginalDetailView({ work: initialWork }: OriginalDetailViewProp
         setWork(initialWork);
     }, [initialWork]);
 
-    const handleSave = (updatedWork: OriginalWork) => {
-        setWork(updatedWork);
-        saveOriginalWork(updatedWork);
+    const handleSave = async (updatedWork: OriginalWork) => {
+        try {
+            const res = await fetch(`/api/originals/${updatedWork.id}`, {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(updatedWork),
+            });
+
+            if (res.ok) {
+                const savedWork = await res.json();
+                setWork(savedWork);
+            } else {
+                alert('저장에 실패했습니다.');
+            }
+        } catch (e) {
+            console.error(e);
+            alert('오류가 발생했습니다.');
+        }
     };
 
     const updateCharacters = (newCharacters: Character[]) => {
