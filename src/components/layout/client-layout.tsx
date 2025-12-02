@@ -2,7 +2,7 @@
 
 import { usePathname } from 'next/navigation';
 import { AppSidebar } from '@/components/layout/app-sidebar';
-import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
+import { Sheet, SheetContent, SheetTrigger, SheetTitle } from '@/components/ui/sheet';
 import { Button } from '@/components/ui/button';
 import { Menu } from 'lucide-react';
 import { useState } from 'react';
@@ -32,6 +32,7 @@ export function ClientLayout({ children }: { children: React.ReactNode }) {
                         </Button>
                     </SheetTrigger>
                     <SheetContent side="left" className="p-0 w-64">
+                        <SheetTitle className="sr-only">Navigation Menu</SheetTitle>
                         <AppSidebar className="relative h-full border-none" />
                     </SheetContent>
                 </Sheet>
