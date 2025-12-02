@@ -26,11 +26,17 @@ export function PromptGenerator({ project }: PromptGeneratorProps) {
 
         const characters = originalWork.canonCharacters.filter(c => selectedActiveChars.includes(c.id));
 
+        const worldRules = originalWork.worldRules || [];
+        const worldRuleDesc = worldRules.map(r => `- ${r.title}: ${r.description}`).join('\n');
+
         const charDescriptions = characters.map(c => {
-            let desc = `- ${c.name}: ${c.personality.join(', ')}`;
+            let desc = `- ${c.name} (${c.isCanon ? '원작 캐릭터' : '오리지널 캐릭터'})`;
+            if (c.description) desc += `\n  * 설명: ${c.description}`;
+            if (c.personality && c.personality.length > 0) desc += `\n  * 성격: ${c.personality.join(', ')}`;
             if (c.appearance && c.appearance.length > 0) desc += `\n  * 외모: ${c.appearance.join(', ')}`;
             if (c.abilities && c.abilities.length > 0) desc += `\n  * 능력: ${c.abilities.join(', ')}`;
             if (c.speechPatterns && c.speechPatterns.length > 0) desc += `\n  * 말투: ${c.speechPatterns.join(', ')}`;
+            if (c.relationships && c.relationships.length > 0) desc += `\n  * 관계: ${c.relationships.join(', ')}`;
             return desc;
         }).join('\n\n');
 
@@ -41,10 +47,15 @@ export function PromptGenerator({ project }: PromptGeneratorProps) {
 
 # 작품 설정
 - 원작: ${originalWork.title}
+- 매체: ${originalWork.mediaType}
 - 시점: ${project.timelineSetting}
 - AU 설정: ${project.auSettings.join(', ') || '없음'}
+- 톤앤매너: ${project.tone ? `문체: ${project.tone.writingStyle}, 분위기: ${project.tone.atmosphere}` : '기본'}
 
-# 등장 캐릭터 (성격 유지 필수)
+# 세계관 및 주요 설정
+${worldRuleDesc || '특별한 세계관 설정 없음'}
+
+# 등장 캐릭터 (성격 및 말투 유지 필수)
 ${charDescriptions}
 
 # 현재 상황 (Context)
@@ -54,6 +65,7 @@ ${context}
 1. 위 상황에 이어질 자연스러운 전개 3가지를 제안해주세요.
 2. 각 전개는 캐릭터의 성격(OOC 방지)을 철저히 지켜야 합니다.
 3. 포스타입 독자들이 좋아할 만한 포인트(감정선, 관계성)를 살려주세요.
+4. 필요하다면 대사 예시도 포함해주세요.
     `.trim();
 
         setGeneratedPrompt(prompt);

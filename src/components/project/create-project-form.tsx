@@ -41,8 +41,12 @@ export function CreateProjectForm() {
 
     const selectedWork = availableWorks.find(w => w.id === originalWorkId);
 
+    const [isSubmitting, setIsSubmitting] = useState(false);
+
     const handleCreate = async () => {
-        if (!title || !originalWorkId) return;
+        if (!title || !originalWorkId || isSubmitting) return;
+
+        setIsSubmitting(true);
 
         const newProject = {
             title,
@@ -71,10 +75,12 @@ export function CreateProjectForm() {
                 router.push(`/projects/${createdProject.id}`);
             } else {
                 alert('프로젝트 생성에 실패했습니다.');
+                setIsSubmitting(false);
             }
         } catch (e) {
             console.error(e);
             alert('오류가 발생했습니다.');
+            setIsSubmitting(false);
         }
     };
 
@@ -171,8 +177,8 @@ export function CreateProjectForm() {
 
                 </CardContent>
                 <CardFooter className="flex justify-end">
-                    <Button onClick={handleCreate} disabled={!title || !originalWorkId}>
-                        프로젝트 생성
+                    <Button onClick={handleCreate} disabled={!title || !originalWorkId || isSubmitting}>
+                        {isSubmitting ? '생성 중...' : '프로젝트 생성'}
                     </Button>
                 </CardFooter>
             </Card>
