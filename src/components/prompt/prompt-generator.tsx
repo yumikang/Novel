@@ -103,16 +103,14 @@ ${context}
                         <div className="space-y-2">
                             <Label>등장 인물 선택 (이번 장면에 나올 캐릭터)</Label>
                             <div className="flex flex-wrap gap-2">
-                                {project.activeCharacterIds.map(charId => {
-                                    const char = originalWork.canonCharacters.find(c => c.id === charId);
-                                    if (!char) return null;
-                                    const isActive = selectedActiveChars.includes(charId);
+                                {originalWork.canonCharacters.map(char => {
+                                    const isActive = selectedActiveChars.includes(char.id);
                                     return (
                                         <Badge
-                                            key={charId}
+                                            key={char.id}
                                             variant={isActive ? "default" : "outline"}
-                                            className="cursor-pointer"
-                                            onClick={() => toggleChar(charId)}
+                                            className="cursor-pointer hover:bg-primary/90"
+                                            onClick={() => toggleChar(char.id)}
                                         >
                                             {char.name}
                                         </Badge>
