@@ -10,10 +10,13 @@ import { useEffect, useState } from 'react';
 // import { getProjects } from '@/lib/store'; // Removed
 import { FanficProject } from '@/lib/types';
 
-export function AppSidebar() {
+interface AppSidebarProps {
+    className?: string;
+}
+
+export function AppSidebar({ className }: AppSidebarProps) {
     const pathname = usePathname();
     const [projects, setProjects] = useState<FanficProject[]>([]);
-
     // Simple way to refresh projects list. In a real app, use a proper store subscription or context.
     // For now, we'll just fetch on mount and rely on page navigation to refresh.
     useEffect(() => {
@@ -38,7 +41,7 @@ export function AppSidebar() {
     }, []);
 
     return (
-        <div className="w-64 border-r bg-slate-50/50 h-screen flex flex-col fixed left-0 top-0">
+        <div className={`w-64 border-r bg-slate-50/50 h-screen flex flex-col ${className || 'fixed left-0 top-0'}`}>
             <div className="p-6">
                 <h1 className="text-xl font-bold tracking-tight text-slate-900 flex items-center gap-2">
                     <BookOpen className="h-6 w-6 text-indigo-600" />
