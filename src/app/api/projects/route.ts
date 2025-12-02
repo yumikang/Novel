@@ -14,7 +14,16 @@ export async function GET() {
         return NextResponse.json(projects);
     } catch (error) {
         console.error('Failed to fetch projects:', error);
-        return NextResponse.json({ error: 'Failed to fetch projects' }, { status: 500 });
+        // @ts-ignore
+        const errorMessage = error?.message || 'Unknown error';
+        // @ts-ignore
+        const errorStack = error?.stack || 'No stack trace';
+        console.error('Error details:', { message: errorMessage, stack: errorStack });
+
+        return NextResponse.json(
+            { error: 'Failed to fetch projects', details: errorMessage },
+            { status: 500 }
+        );
     }
 }
 
