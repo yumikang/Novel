@@ -5,7 +5,8 @@ import Link from 'next/link';
 import { Plus } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
-// import { getProjects } from '@/lib/store'; // Removed
+// // Trigger Vercel Rebuild
+import { redirect } from 'next/navigation';
 import { FanficProject } from '@/lib/types';
 // import { PRESET_ORIGINAL_WORKS } from '@/lib/constants'; // Removed
 
