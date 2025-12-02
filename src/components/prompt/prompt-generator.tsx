@@ -26,9 +26,13 @@ export function PromptGenerator({ project }: PromptGeneratorProps) {
 
         const characters = originalWork.canonCharacters.filter(c => selectedActiveChars.includes(c.id));
 
-        const charDescriptions = characters.map(c =>
-            `- ${c.name}: ${c.personality.join(', ')} (말투: ${c.speechPatterns.join(', ') || '특이사항 없음'})`
-        ).join('\n');
+        const charDescriptions = characters.map(c => {
+            let desc = `- ${c.name}: ${c.personality.join(', ')}`;
+            if (c.appearance && c.appearance.length > 0) desc += `\n  * 외모: ${c.appearance.join(', ')}`;
+            if (c.abilities && c.abilities.length > 0) desc += `\n  * 능력: ${c.abilities.join(', ')}`;
+            if (c.speechPatterns && c.speechPatterns.length > 0) desc += `\n  * 말투: ${c.speechPatterns.join(', ')}`;
+            return desc;
+        }).join('\n\n');
 
         const prompt = `
 # 역할

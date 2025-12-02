@@ -5,6 +5,8 @@ export interface Character {
   name: string;
   isCanon: boolean;             // 원작 캐릭터 여부
   personality: string[];        // 성격 키워드
+  appearance: string[];         // 외모 묘사
+  abilities: string[];          // 능력/특기
   speechPatterns: string[];     // 말투 예시
   relationships: Relationship[];
   description?: string;
@@ -15,13 +17,19 @@ export interface Relationship {
   description: string;
 }
 
+export interface WorldRule {
+  id: string;
+  title: string;
+  description: string;
+}
+
 export interface OriginalWork {
   id: string;
   title: string;
   mediaType: MediaType;
   canonCharacters: Character[]; // 원작 캐릭터
-  worldRules: string[];         // 세계관 규칙
-  source?: string;
+  worldRules: WorldRule[];         // 세계관 규칙
+  source: 'Preset' | 'Custom';
 }
 
 export interface Foreshadow {

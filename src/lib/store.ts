@@ -46,8 +46,12 @@ export const getCustomOriginals = (): OriginalWork[] => {
 };
 
 export const getAllOriginalWorks = (): OriginalWork[] => {
-    const custom = getCustomOriginals();
-    return [...PRESET_ORIGINAL_WORKS, ...custom];
+    return getCustomOriginals();
+};
+
+export const getOriginalWork = (id: string): OriginalWork | undefined => {
+    const works = getAllOriginalWorks();
+    return works.find((w) => w.id === id);
 };
 
 export const saveOriginalWork = (work: OriginalWork): void => {
@@ -61,4 +65,12 @@ export const saveOriginalWork = (work: OriginalWork): void => {
     }
 
     localStorage.setItem(ORIGINAL_WORK_KEY, JSON.stringify(works));
+    window.dispatchEvent(new Event('original-work-updated'));
+};
+
+export const deleteOriginalWork = (id: string): void => {
+    const works = getCustomOriginals();
+    const filtered = works.filter((w) => w.id !== id);
+    localStorage.setItem(ORIGINAL_WORK_KEY, JSON.stringify(filtered));
+    window.dispatchEvent(new Event('original-work-updated'));
 };

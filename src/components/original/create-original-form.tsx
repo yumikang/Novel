@@ -2,14 +2,18 @@
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { Plus, Trash2 } from 'lucide-react';
+import { Plus, Trash2, ChevronDown, ChevronUp } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
+import { Badge } from '@/components/ui/badge';
 import { saveOriginalWork } from '@/lib/store';
 import { Character, MediaType, OriginalWork } from '@/lib/types';
+
+import { BulkCharacterImport } from '@/components/original/bulk-character-import';
+import { SmartCharacterAdd } from '@/components/original/smart-character-add';
+import { CharacterListItem } from '@/components/original/character-list-item';
 
 export function CreateOriginalForm() {
     const router = useRouter();
@@ -18,25 +22,8 @@ export function CreateOriginalForm() {
     const [mediaType, setMediaType] = useState<MediaType>('Other');
     const [characters, setCharacters] = useState<Character[]>([]);
 
-    // Temp state for new character input
-    const [newCharName, setNewCharName] = useState('');
-    const [newCharPersonality, setNewCharPersonality] = useState('');
-
-    const addCharacter = () => {
-        if (!newCharName) return;
-
-        const newChar: Character = {
-            id: crypto.randomUUID(),
-            name: newCharName,
-            isCanon: true,
-            personality: newCharPersonality.split(',').map(s => s.trim()).filter(Boolean),
-            speechPatterns: [],
-            relationships: []
-        };
-
-        setCharacters([...characters, newChar]);
-        setNewCharName('');
-        setNewCharPersonality('');
+    const handleBulkImport = (newChars: Character[]) => {
+        setCharacters(prev => [...prev, ...newChars]);
     };
 
     const removeCharacter = (id: string) => {
@@ -56,11 +43,16 @@ export function CreateOriginalForm() {
         };
 
         saveOriginalWork(newWork);
+        alert('원작이 성공적으로 등록되었습니다.');
         router.push('/originals');
     };
 
+    const updateCharacter = (updatedChar: Character) => {
+        setCharacters(characters.map(c => c.id === updatedChar.id ? updatedChar : c));
+    };
+
     return (
-        <div className="max-w-2xl mx-auto">
+        <div className="w-full">
             <Card>
                 <CardHeader>
                     <CardTitle>새 원작 등록</CardTitle>
@@ -79,65 +71,47 @@ export function CreateOriginalForm() {
                     </div>
 
                     <div className="space-y-2">
-                        <Label htmlFor="mediaType">매체 유형</Label>
-                        <Select onValueChange={(val) => setMediaType(val as MediaType)} defaultValue="Other">
-                            <SelectTrigger>
-                                <SelectValue placeholder="유형 선택" />
-                            </SelectTrigger>
-                            <SelectContent>
-                                <SelectItem value="Novel">소설</SelectItem>
-                                <SelectItem value="Webtoon">웹툰</SelectItem>
-                                <SelectItem value="Game">게임</SelectItem>
-                                <SelectItem value="Anime">애니메이션</SelectItem>
-                                <SelectItem value="Drama">드라마</SelectItem>
-                                <SelectItem value="Idol">아이돌</SelectItem>
-                                <SelectItem value="Other">기타</SelectItem>
-                            </SelectContent>
-                        </Select>
+                        <Label>매체 유형</Label>
+                        <div className="flex flex-wrap gap-2">
+                            {(['Novel', 'Webtoon', 'Game', 'Anime', 'Drama', 'Idol', 'Other'] as MediaType[]).map((type) => (
+                                <Button
+                                    key={type}
+                                    type="button"
+                                    variant={mediaType === type ? "default" : "outline"}
+                                    size="sm"
+                                    onClick={() => setMediaType(type)}
+                                >
+                                    {type === 'Novel' && '소설'}
+                                    {type === 'Webtoon' && '웹툰'}
+                                    {type === 'Game' && '게임'}
+                                    {type === 'Anime' && '애니메이션'}
+                                    {type === 'Drama' && '드라마'}
+                                    {type === 'Idol' && '아이돌'}
+                                    {type === 'Other' && '기타'}
+                                </Button>
+                            ))}
+                        </div>
                     </div>
 
                     <div className="space-y-4 border rounded-md p-4 bg-slate-50">
                         <div className="flex justify-between items-center">
                             <Label>캐릭터 목록 ({characters.length})</Label>
+                            <BulkCharacterImport onImport={handleBulkImport} />
                         </div>
 
                         <div className="grid gap-4">
-                            <div className="flex gap-2 items-end">
-                                <div className="flex-1 space-y-2">
-                                    <Label htmlFor="charName" className="text-xs">이름</Label>
-                                    <Input
-                                        id="charName"
-                                        value={newCharName}
-                                        onChange={(e) => setNewCharName(e.target.value)}
-                                        placeholder="캐릭터 이름"
-                                    />
-                                </div>
-                                <div className="flex-[2] space-y-2">
-                                    <Label htmlFor="charPers" className="text-xs">성격 (쉼표 구분)</Label>
-                                    <Input
-                                        id="charPers"
-                                        value={newCharPersonality}
-                                        onChange={(e) => setNewCharPersonality(e.target.value)}
-                                        placeholder="예: 냉철함, 다정함"
-                                        onKeyDown={(e) => e.key === 'Enter' && addCharacter()}
-                                    />
-                                </div>
-                                <Button onClick={addCharacter} size="icon" variant="secondary">
-                                    <Plus className="h-4 w-4" />
-                                </Button>
+                            <div className="flex justify-end">
+                                <SmartCharacterAdd onAdd={(char) => setCharacters([...characters, char])} />
                             </div>
 
                             <div className="space-y-2">
-                                {characters.map((char) => (
-                                    <div key={char.id} className="flex justify-between items-center bg-white p-2 rounded border text-sm">
-                                        <div>
-                                            <span className="font-medium mr-2">{char.name}</span>
-                                            <span className="text-slate-500 text-xs">{char.personality.join(', ')}</span>
-                                        </div>
-                                        <Button variant="ghost" size="icon" className="h-6 w-6 text-red-500" onClick={() => removeCharacter(char.id)}>
-                                            <Trash2 className="h-3 w-3" />
-                                        </Button>
-                                    </div>
+                                {characters.map((char, index) => (
+                                    <CharacterListItem
+                                        key={char.id}
+                                        character={char}
+                                        onRemove={() => removeCharacter(char.id)}
+                                        onUpdate={updateCharacter}
+                                    />
                                 ))}
                             </div>
                         </div>

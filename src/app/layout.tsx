@@ -17,7 +17,7 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="ko">
-      <body className={inter.className}>
+      <body className={inter.className} suppressHydrationWarning={true}>
         <AppSidebar />
         <main className="pl-64 min-h-screen bg-white">
           {children}

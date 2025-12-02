@@ -2,10 +2,10 @@
 
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
-import { Plus } from 'lucide-react';
+import { Plus, Trash2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
-import { getAllOriginalWorks } from '@/lib/store';
+import { getAllOriginalWorks, deleteOriginalWork } from '@/lib/store';
 import { OriginalWork } from '@/lib/types';
 import { CreateOriginalForm } from '@/components/original/create-original-form';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -14,11 +14,15 @@ export default function OriginalsPage() {
     const [works, setWorks] = useState<OriginalWork[]>([]);
 
     useEffect(() => {
-        setWorks(getAllOriginalWorks());
+        const loadWorks = () => setWorks(getAllOriginalWorks());
+        loadWorks();
+
+        window.addEventListener('original-work-updated', loadWorks);
+        return () => window.removeEventListener('original-work-updated', loadWorks);
     }, []);
 
     return (
-        <div className="container mx-auto py-10 px-4">
+        <div className="w-full py-10 px-6">
             <header className="flex justify-between items-center mb-8">
                 <div>
                     <h1 className="text-3xl font-bold tracking-tight text-slate-900">원작 관리</h1>
@@ -35,30 +39,47 @@ export default function OriginalsPage() {
                 <TabsContent value="list" className="space-y-4">
                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                         {works.map((work) => (
-                            <Card key={work.id}>
-                                <CardHeader>
-                                    <div className="flex justify-between items-start">
-                                        <div>
-                                            <CardTitle className="text-lg">{work.title}</CardTitle>
-                                            <CardDescription>{work.mediaType}</CardDescription>
-                                        </div>
-                                        {work.source === 'Custom' && (
-                                            <span className="text-xs bg-indigo-100 text-indigo-700 px-2 py-1 rounded">Custom</span>
-                                        )}
-                                    </div>
-                                </CardHeader>
-                                <CardContent>
-                                    <div className="text-sm text-slate-600">
-                                        <p>등록된 캐릭터: {work.canonCharacters.length}명</p>
-                                        <div className="flex flex-wrap gap-1 mt-2">
-                                            {work.canonCharacters.slice(0, 3).map(c => (
-                                                <span key={c.id} className="text-xs bg-slate-100 px-1.5 py-0.5 rounded">{c.name}</span>
-                                            ))}
-                                            {work.canonCharacters.length > 3 && <span className="text-xs text-slate-400">...</span>}
-                                        </div>
-                                    </div>
-                                </CardContent>
-                            </Card>
+                            <div key={work.id} className="relative group">
+                                <Link href={`/originals/${work.id}`}>
+                                    <Card className="h-full hover:shadow-md transition-shadow cursor-pointer">
+                                        <CardHeader>
+                                            <div className="flex justify-between items-start">
+                                                <div>
+                                                    <CardTitle className="text-lg">{work.title}</CardTitle>
+                                                    <CardDescription>{work.mediaType}</CardDescription>
+                                                </div>
+                                            </div>
+                                        </CardHeader>
+                                        <CardContent>
+                                            <div className="text-sm text-slate-600">
+                                                <p>등록된 캐릭터: {work.canonCharacters.length}명</p>
+                                                <div className="flex flex-wrap gap-1 mt-2">
+                                                    {work.canonCharacters.slice(0, 3).map(c => (
+                                                        <span key={c.id} className="text-xs bg-slate-100 px-1.5 py-0.5 rounded">{c.name}</span>
+                                                    ))}
+                                                    {work.canonCharacters.length > 3 && <span className="text-xs text-slate-400">...</span>}
+                                                </div>
+                                            </div>
+                                        </CardContent>
+                                    </Card>
+                                </Link>
+                                {work.source === 'Custom' && (
+                                    <Button
+                                        variant="destructive"
+                                        size="icon"
+                                        className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity h-8 w-8"
+                                        onClick={(e) => {
+                                            e.preventDefault();
+                                            e.stopPropagation();
+                                            if (confirm('정말 이 원작을 삭제하시겠습니까?')) {
+                                                deleteOriginalWork(work.id);
+                                            }
+                                        }}
+                                    >
+                                        <Trash2 className="h-4 w-4" />
+                                    </Button>
+                                )}
+                            </div>
                         ))}
                     </div>
                 </TabsContent>
