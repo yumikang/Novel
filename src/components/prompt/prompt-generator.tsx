@@ -17,17 +17,26 @@ import {
     DialogTitle,
     DialogTrigger,
 } from '@/components/ui/dialog';
-import { FanficProject, Character } from '@/lib/types';
+import {
+    Select,
+    SelectContent,
+    SelectItem,
+    SelectTrigger,
+    SelectValue,
+} from '@/components/ui/select';
+import { FanficProject, Character, Episode } from '@/lib/types';
 
 interface PromptGeneratorProps {
     project: FanficProject;
+    episodes?: Episode[];
     onProjectUpdate?: () => void;
 }
 
-export function PromptGenerator({ project, onProjectUpdate }: PromptGeneratorProps) {
+export function PromptGenerator({ project, episodes = [], onProjectUpdate }: PromptGeneratorProps) {
     const [context, setContext] = useState('');
     const [generatedPrompt, setGeneratedPrompt] = useState('');
     const [selectedActiveChars, setSelectedActiveChars] = useState<string[]>(project.activeCharacterIds);
+    const [selectedEpisodeId, setSelectedEpisodeId] = useState<string>('');
 
     // 캐릭터 추가 다이얼로그 상태
     const [addCharDialogOpen, setAddCharDialogOpen] = useState(false);
@@ -41,6 +50,17 @@ export function PromptGenerator({ project, onProjectUpdate }: PromptGeneratorPro
     const [tempCharacters, setTempCharacters] = useState<Character[]>([]);
 
     const originalWork = project.originalWork;
+
+    // 에피소드 선택 시 본문을 context에 로드
+    const handleEpisodeSelect = (episodeId: string) => {
+        setSelectedEpisodeId(episodeId);
+        if (episodeId && episodeId !== 'none') {
+            const episode = episodes.find(e => e.id === episodeId);
+            if (episode) {
+                setContext(episode.content || '');
+            }
+        }
+    };
 
     // 원작 캐릭터 + 커스텀 캐릭터 + 임시 캐릭터 합치기
     const allCharacters = [
@@ -323,7 +343,24 @@ ${context}
                         </div>
 
                         <div className="space-y-2 flex-1 flex flex-col">
-                            <Label>현재 줄거리 / 직전 장면</Label>
+                            <div className="flex items-center justify-between">
+                                <Label>현재 줄거리 / 직전 장면</Label>
+                                {episodes.length > 0 && (
+                                    <Select value={selectedEpisodeId} onValueChange={handleEpisodeSelect}>
+                                        <SelectTrigger className="w-[200px]">
+                                            <SelectValue placeholder="에피소드에서 불러오기" />
+                                        </SelectTrigger>
+                                        <SelectContent>
+                                            <SelectItem value="none">직접 입력</SelectItem>
+                                            {episodes.map(ep => (
+                                                <SelectItem key={ep.id} value={ep.id}>
+                                                    {ep.title}
+                                                </SelectItem>
+                                            ))}
+                                        </SelectContent>
+                                    </Select>
+                                )}
+                            </div>
                             <Textarea
                                 placeholder="예: 탄지로가 임무를 마치고 돌아오는 길에 이상한 냄새를 맡았다. 네즈코가 상자 안에서 끙끙거리는 소리가 들린다..."
                                 className="flex-1 resize-none min-h-[200px]"
