@@ -72,13 +72,17 @@ export function PromptGenerator({ project, episodes = [], onProjectUpdate }: Pro
     const handleGenerate = () => {
         if (!originalWork) return;
 
-        const characters = allCharacters.filter(c => selectedActiveChars.includes(c.id));
+        // 선택된 캐릭터들 (Badge에서 선택된 것들)
+        const selectedCharacters = allCharacters.filter(c => selectedActiveChars.includes(c.id));
 
         const worldRules = originalWork.worldRules || [];
         const worldRuleDesc = worldRules.map(r => `- ${r.title}: ${r.description}`).join('\n');
 
-        const charDescriptions = characters.length > 0
-            ? characters.map(c => {
+        // 선택된 캐릭터가 없으면 전체 캐릭터 목록 사용, 그것도 없으면 안내 메시지
+        const charactersToUse = selectedCharacters.length > 0 ? selectedCharacters : allCharacters;
+
+        const charDescriptions = charactersToUse.length > 0
+            ? charactersToUse.map(c => {
                 let desc = `- ${c.name} (${c.isCanon ? '원작 캐릭터' : '오리지널 캐릭터'})`;
                 if (c.description) desc += `\n  * 설명: ${c.description}`;
                 if (c.personality && c.personality.length > 0) desc += `\n  * 성격: ${c.personality.join(', ')}`;
