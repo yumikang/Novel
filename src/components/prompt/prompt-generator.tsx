@@ -32,11 +32,14 @@ interface PromptGeneratorProps {
     onProjectUpdate?: () => void;
 }
 
+type AIModel = 'claude' | 'grok';
+
 export function PromptGenerator({ project, episodes = [], onProjectUpdate }: PromptGeneratorProps) {
     const [context, setContext] = useState('');
     const [generatedPrompt, setGeneratedPrompt] = useState('');
     const [selectedActiveChars, setSelectedActiveChars] = useState<string[]>(project.activeCharacterIds);
     const [selectedEpisodeId, setSelectedEpisodeId] = useState<string>('');
+    const [selectedModel, setSelectedModel] = useState<AIModel>('grok');
 
     // 캐릭터 추가 다이얼로그 상태
     const [addCharDialogOpen, setAddCharDialogOpen] = useState(false);
@@ -98,7 +101,40 @@ export function PromptGenerator({ project, episodes = [], onProjectUpdate }: Pro
             ? `문체: ${project.tone.writingStyle}, 분위기: ${project.tone.atmosphere}`
             : `(미설정 - 현재 상황 텍스트의 분위기를 참고해주세요)`;
 
-        const prompt = `
+        let prompt = '';
+
+        if (selectedModel === 'grok') {
+            // Grok용 프롬프트 - 트위터 친화적, 캐주얼한 톤
+            prompt = `
+넌 트위터에서 2차 창작하는 작가의 브레인스토밍 파트너야.
+트위터 타래 감성 알지? 그 느낌으로 아이디어 던져줘. 밈이나 드립 섞어도 됨.
+
+## 작품 정보
+- 원작: ${originalWork.title} (${originalWork.mediaType})
+- 시점: ${project.timelineSetting}
+- AU: ${project.auSettings.join(', ') || '없음'}
+- 톤: ${toneDesc}
+
+## 세계관
+${worldRuleDesc || '특별한 설정 없음'}
+
+## 등장인물
+${charDescriptions}
+
+## 현재 상황
+${context}
+
+## 해줘야 할 것
+1. 이 상황에서 터질 수 있는 전개 아이디어 3개 던져줘
+2. 캐릭터성 지켜야 함 (OOC ㄴㄴ)
+3. 독자들 심장 뛰게 할 관계성/감정선 포인트 짚어줘
+4. 각 아이디어마다 핵심 대사 1-2줄 (이게 제일 중요함)
+
+트위터 썰 올리는 느낌으로 재밌게 써줘. 너무 딱딱하게 하지 말고.
+    `.trim();
+        } else {
+            // Claude/ChatGPT용 프롬프트 - 정형화된 스타일
+            prompt = `
 # 역할
 당신은 작가의 아이디어 구상을 돕는 보조 작가(Brainstorming Partner)입니다.
 원작의 설정과 캐릭터성을 완벽하게 이해하고 있으며, 작가가 던져준 거친 아이디어를 구체적인 에피소드나 장면으로 발전시키는 능력이 탁월합니다.
@@ -126,6 +162,7 @@ ${context}
 3. 독자들이 좋아할 만한 '관계성'과 '감정선' 포인트가 무엇인지 짚어주세요.
 4. 각 아이디어별로 핵심 대사(Key Dialogue)를 1~2줄 포함해주세요.
     `.trim();
+        }
 
         setGeneratedPrompt(prompt);
     };
@@ -373,9 +410,20 @@ ${context}
                             />
                         </div>
 
-                        <Button onClick={handleGenerate} className="w-full">
-                            <Sparkles className="mr-2 h-4 w-4" /> 프롬프트 생성
-                        </Button>
+                        <div className="flex gap-2">
+                            <Select value={selectedModel} onValueChange={(v) => setSelectedModel(v as AIModel)}>
+                                <SelectTrigger className="w-[140px]">
+                                    <SelectValue />
+                                </SelectTrigger>
+                                <SelectContent>
+                                    <SelectItem value="grok">🐦 Grok (X)</SelectItem>
+                                    <SelectItem value="claude">🤖 Claude/GPT</SelectItem>
+                                </SelectContent>
+                            </Select>
+                            <Button onClick={handleGenerate} className="flex-1">
+                                <Sparkles className="mr-2 h-4 w-4" /> 프롬프트 생성
+                            </Button>
+                        </div>
                     </CardContent>
                 </Card>
             </div>
@@ -394,7 +442,7 @@ ${context}
                             readOnly
                             className="h-full resize-none font-mono text-sm bg-slate-50"
                             value={generatedPrompt}
-                            placeholder="프롬프트가 여기에 생성됩니다. 복사해서 Claude나 ChatGPT에 붙여넣으세요."
+                            placeholder="프롬프트가 여기에 생성됩니다. 복사해서 선택한 AI에 붙여넣으세요."
                         />
                     </CardContent>
                 </Card>
