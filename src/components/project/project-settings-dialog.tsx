@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { Settings, Trash2, Plus, X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -18,7 +18,14 @@ import { Label } from '@/components/ui/label';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Textarea } from '@/components/ui/textarea';
 import { Card, CardContent } from '@/components/ui/card';
-import { FanficProject, Character } from '@/lib/types';
+import {
+    Select,
+    SelectContent,
+    SelectItem,
+    SelectTrigger,
+    SelectValue,
+} from '@/components/ui/select';
+import { FanficProject, Character, OriginalWork } from '@/lib/types';
 
 interface ProjectSettingsDialogProps {
     project: FanficProject;
@@ -35,6 +42,18 @@ export function ProjectSettingsDialog({ project, onUpdate }: ProjectSettingsDial
     const [customCharacters, setCustomCharacters] = useState<Character[]>(
         project.customCharacters || []
     );
+    const [originalWorkId, setOriginalWorkId] = useState(project.originalWorkId || '');
+    const [availableWorks, setAvailableWorks] = useState<OriginalWork[]>([]);
+
+    // 원작 목록 가져오기
+    useEffect(() => {
+        if (open) {
+            fetch('/api/originals')
+                .then(res => res.json())
+                .then(data => setAvailableWorks(data))
+                .catch(err => console.error('Failed to fetch originals:', err));
+        }
+    }, [open]);
 
     // 새 캐릭터 추가
     const addCharacter = () => {
@@ -80,6 +99,7 @@ export function ProjectSettingsDialog({ project, onUpdate }: ProjectSettingsDial
                     timelineSetting: timeline,
                     auSettings: auSettings.split(',').map(s => s.trim()).filter(Boolean),
                     customCharacters: customCharacters.filter(c => c.name.trim() !== ''),
+                    originalWorkId: originalWorkId || undefined,
                 }),
             });
 
@@ -151,6 +171,30 @@ export function ProjectSettingsDialog({ project, onUpdate }: ProjectSettingsDial
                                 onChange={(e) => setTitle(e.target.value)}
                                 className="col-span-3"
                             />
+                        </div>
+                        <div className="grid grid-cols-4 items-center gap-4">
+                            <Label htmlFor="original" className="text-right">
+                                원작
+                            </Label>
+                            <div className="col-span-3">
+                                <Select value={originalWorkId} onValueChange={setOriginalWorkId}>
+                                    <SelectTrigger>
+                                        <SelectValue placeholder="원작을 선택하세요" />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                        {availableWorks.map(work => (
+                                            <SelectItem key={work.id} value={work.id}>
+                                                {work.title} ({work.mediaType})
+                                            </SelectItem>
+                                        ))}
+                                    </SelectContent>
+                                </Select>
+                                {availableWorks.length === 0 && (
+                                    <p className="text-xs text-muted-foreground mt-1">
+                                        원작 관리에서 먼저 원작을 등록하세요
+                                    </p>
+                                )}
+                            </div>
                         </div>
                         <div className="grid grid-cols-4 items-center gap-4">
                             <Label htmlFor="timeline" className="text-right">

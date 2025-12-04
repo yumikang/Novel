@@ -1,30 +1,52 @@
 'use client';
 
 import { useState } from 'react';
-import { Copy, Sparkles } from 'lucide-react';
+import { Copy, Sparkles, Plus, X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
+import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { FanficProject, OriginalWork } from '@/lib/types';
-// import { PRESET_ORIGINAL_WORKS } from '@/lib/constants'; // Removed
+import {
+    Dialog,
+    DialogContent,
+    DialogDescription,
+    DialogFooter,
+    DialogHeader,
+    DialogTitle,
+    DialogTrigger,
+} from '@/components/ui/dialog';
+import { FanficProject, Character } from '@/lib/types';
 
 interface PromptGeneratorProps {
     project: FanficProject;
+    onProjectUpdate?: () => void;
 }
 
-export function PromptGenerator({ project }: PromptGeneratorProps) {
+export function PromptGenerator({ project, onProjectUpdate }: PromptGeneratorProps) {
     const [context, setContext] = useState('');
     const [generatedPrompt, setGeneratedPrompt] = useState('');
     const [selectedActiveChars, setSelectedActiveChars] = useState<string[]>(project.activeCharacterIds);
 
+    // 캐릭터 추가 다이얼로그 상태
+    const [addCharDialogOpen, setAddCharDialogOpen] = useState(false);
+    const [newCharName, setNewCharName] = useState('');
+    const [newCharDescription, setNewCharDescription] = useState('');
+    const [newCharPersonality, setNewCharPersonality] = useState('');
+    const [newCharSpeechPatterns, setNewCharSpeechPatterns] = useState('');
+    const [addingChar, setAddingChar] = useState(false);
+
+    // 즉석에서 추가된 임시 캐릭터 (세션 동안만 유지)
+    const [tempCharacters, setTempCharacters] = useState<Character[]>([]);
+
     const originalWork = project.originalWork;
 
-    // 원작 캐릭터 + 커스텀 캐릭터 합치기
+    // 원작 캐릭터 + 커스텀 캐릭터 + 임시 캐릭터 합치기
     const allCharacters = [
         ...(originalWork?.canonCharacters || []),
-        ...(project.customCharacters || []).map(c => ({ ...c, isCanon: false }))
+        ...(project.customCharacters || []).map(c => ({ ...c, isCanon: false })),
+        ...tempCharacters.map(c => ({ ...c, isCanon: false }))
     ];
 
     const handleGenerate = () => {
@@ -95,7 +117,94 @@ ${context}
         );
     };
 
-    if (!originalWork) return <div>원작 정보를 찾을 수 없습니다.</div>;
+    // 콤마로 구분된 문자열을 배열로 변환
+    const parseArrayField = (value: string): string[] => {
+        return value.split(',').map(s => s.trim()).filter(Boolean);
+    };
+
+    // 임시 캐릭터 추가 (세션 동안만 유지)
+    const handleAddTempCharacter = () => {
+        if (!newCharName.trim()) return;
+
+        const newChar: Character = {
+            id: `temp-${Date.now()}`,
+            name: newCharName.trim(),
+            isCanon: false,
+            description: newCharDescription.trim(),
+            personality: parseArrayField(newCharPersonality),
+            appearance: [],
+            abilities: [],
+            speechPatterns: parseArrayField(newCharSpeechPatterns),
+            relationships: [],
+        };
+
+        setTempCharacters(prev => [...prev, newChar]);
+        setSelectedActiveChars(prev => [...prev, newChar.id]);
+
+        // 폼 초기화
+        setNewCharName('');
+        setNewCharDescription('');
+        setNewCharPersonality('');
+        setNewCharSpeechPatterns('');
+        setAddCharDialogOpen(false);
+    };
+
+    // 캐릭터를 프로젝트에 영구 저장
+    const handleSaveCharacterToProject = async () => {
+        if (!newCharName.trim()) return;
+        setAddingChar(true);
+
+        try {
+            const newChar = {
+                name: newCharName.trim(),
+                description: newCharDescription.trim(),
+                personality: parseArrayField(newCharPersonality),
+                speechPatterns: parseArrayField(newCharSpeechPatterns),
+            };
+
+            const updatedCustomCharacters = [
+                ...(project.customCharacters || []),
+                newChar,
+            ];
+
+            const res = await fetch(`/api/projects/${project.id}`, {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    customCharacters: updatedCustomCharacters,
+                }),
+            });
+
+            if (res.ok) {
+                // 폼 초기화
+                setNewCharName('');
+                setNewCharDescription('');
+                setNewCharPersonality('');
+                setNewCharSpeechPatterns('');
+                setAddCharDialogOpen(false);
+
+                // 부모 컴포넌트에 업데이트 알림
+                if (onProjectUpdate) {
+                    onProjectUpdate();
+                }
+            } else {
+                alert('캐릭터 저장에 실패했습니다.');
+            }
+        } catch (error) {
+            console.error('Failed to save character:', error);
+            alert('오류가 발생했습니다.');
+        } finally {
+            setAddingChar(false);
+        }
+    };
+
+    // 임시 캐릭터 제거
+    const removeTempCharacter = (id: string) => {
+        setTempCharacters(prev => prev.filter(c => c.id !== id));
+        setSelectedActiveChars(prev => prev.filter(cId => cId !== id));
+    };
+
+    if (!originalWork) return <div className="p-4 text-center text-muted-foreground">원작 정보를 찾을 수 없습니다. 프로젝트 설정에서 원작을 선택해주세요.</div>;
 
     return (
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 h-full">
@@ -107,24 +216,105 @@ ${context}
                     </CardHeader>
                     <CardContent className="flex-1 flex flex-col gap-4">
                         <div className="space-y-2">
-                            <Label>등장 인물 선택 (이번 장면에 나올 캐릭터)</Label>
+                            <div className="flex items-center justify-between">
+                                <Label>등장 인물 선택 (이번 장면에 나올 캐릭터)</Label>
+                                <Dialog open={addCharDialogOpen} onOpenChange={setAddCharDialogOpen}>
+                                    <DialogTrigger asChild>
+                                        <Button variant="outline" size="sm">
+                                            <Plus className="h-3 w-3 mr-1" /> 캐릭터 추가
+                                        </Button>
+                                    </DialogTrigger>
+                                    <DialogContent className="sm:max-w-[425px]">
+                                        <DialogHeader>
+                                            <DialogTitle>캐릭터 추가</DialogTitle>
+                                            <DialogDescription>
+                                                이번 장면에 등장할 새 캐릭터를 추가하세요.
+                                            </DialogDescription>
+                                        </DialogHeader>
+                                        <div className="space-y-4 py-4">
+                                            <div className="space-y-2">
+                                                <Label htmlFor="charName">이름 *</Label>
+                                                <Input
+                                                    id="charName"
+                                                    placeholder="캐릭터 이름"
+                                                    value={newCharName}
+                                                    onChange={(e) => setNewCharName(e.target.value)}
+                                                />
+                                            </div>
+                                            <div className="space-y-2">
+                                                <Label htmlFor="charDesc">설명</Label>
+                                                <Textarea
+                                                    id="charDesc"
+                                                    placeholder="캐릭터에 대한 간단한 설명"
+                                                    value={newCharDescription}
+                                                    onChange={(e) => setNewCharDescription(e.target.value)}
+                                                    rows={2}
+                                                />
+                                            </div>
+                                            <div className="space-y-2">
+                                                <Label htmlFor="charPersonality">성격 (쉼표로 구분)</Label>
+                                                <Input
+                                                    id="charPersonality"
+                                                    placeholder="예: 냉철함, 츤데레, 다정함"
+                                                    value={newCharPersonality}
+                                                    onChange={(e) => setNewCharPersonality(e.target.value)}
+                                                />
+                                            </div>
+                                            <div className="space-y-2">
+                                                <Label htmlFor="charSpeech">말투 예시 (쉼표로 구분)</Label>
+                                                <Input
+                                                    id="charSpeech"
+                                                    placeholder="예: ~다네, ~인 것 같군"
+                                                    value={newCharSpeechPatterns}
+                                                    onChange={(e) => setNewCharSpeechPatterns(e.target.value)}
+                                                />
+                                            </div>
+                                        </div>
+                                        <DialogFooter className="flex gap-2 sm:gap-0">
+                                            <Button
+                                                variant="outline"
+                                                onClick={handleAddTempCharacter}
+                                                disabled={!newCharName.trim()}
+                                            >
+                                                이번만 사용
+                                            </Button>
+                                            <Button
+                                                onClick={handleSaveCharacterToProject}
+                                                disabled={!newCharName.trim() || addingChar}
+                                            >
+                                                {addingChar ? '저장 중...' : '프로젝트에 저장'}
+                                            </Button>
+                                        </DialogFooter>
+                                    </DialogContent>
+                                </Dialog>
+                            </div>
                             <div className="flex flex-wrap gap-2">
                                 {allCharacters.length === 0 ? (
                                     <p className="text-sm text-muted-foreground">
-                                        등록된 캐릭터가 없습니다. 프로젝트 설정에서 커스텀 캐릭터를 추가해주세요.
+                                        등록된 캐릭터가 없습니다. 위 버튼으로 캐릭터를 추가해주세요.
                                     </p>
                                 ) : (
                                     allCharacters.map(char => {
                                         const isActive = selectedActiveChars.includes(char.id);
+                                        const isTemp = char.id.startsWith('temp-');
                                         return (
                                             <Badge
                                                 key={char.id}
                                                 variant={isActive ? "default" : "outline"}
-                                                className="cursor-pointer hover:bg-primary/90"
+                                                className="cursor-pointer hover:bg-primary/90 group"
                                                 onClick={() => toggleChar(char.id)}
                                             >
                                                 {char.name}
                                                 {!char.isCanon && <span className="ml-1 opacity-60">(OC)</span>}
+                                                {isTemp && (
+                                                    <X
+                                                        className="ml-1 h-3 w-3 opacity-60 hover:opacity-100"
+                                                        onClick={(e) => {
+                                                            e.stopPropagation();
+                                                            removeTempCharacter(char.id);
+                                                        }}
+                                                    />
+                                                )}
                                             </Badge>
                                         );
                                     })

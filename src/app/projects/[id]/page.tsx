@@ -119,7 +119,7 @@ export default function ProjectWorkspacePage() {
                     </TabsContent>
 
                     <TabsContent value="prompt" className="flex-1 min-h-0">
-                        <PromptGenerator project={project} />
+                        <PromptGenerator project={project} onProjectUpdate={fetchProject} />
                     </TabsContent>
                 </Tabs>
             </div>

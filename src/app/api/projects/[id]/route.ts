@@ -39,7 +39,7 @@ export async function PUT(
     try {
         const { id } = await params;
         const body = await request.json();
-        const { title, timelineSetting, auSettings, activeCharacterIds, tone, customCharacters, foreshadows } = body;
+        const { title, timelineSetting, auSettings, activeCharacterIds, tone, customCharacters, foreshadows, originalWorkId } = body;
 
         // Transaction to update project and related data
         const project = await prisma.$transaction(async (tx: any) => {
@@ -52,6 +52,7 @@ export async function PUT(
                     auSettings,
                     activeCharacterIds,
                     tone,
+                    ...(originalWorkId && { originalWorkId }),
                 },
             });
 
