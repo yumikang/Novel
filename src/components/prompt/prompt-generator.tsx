@@ -8,6 +8,7 @@ import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
+import { Checkbox } from '@/components/ui/checkbox';
 import {
     Dialog,
     DialogContent,
@@ -40,6 +41,7 @@ export function PromptGenerator({ project, episodes = [], onProjectUpdate }: Pro
     const [selectedActiveChars, setSelectedActiveChars] = useState<string[]>(project.activeCharacterIds);
     const [selectedEpisodeId, setSelectedEpisodeId] = useState<string>('');
     const [selectedModel, setSelectedModel] = useState<AIModel>('grok');
+    const [allowMature, setAllowMature] = useState(false); // 15금 수위 허용
 
     // 캐릭터 추가 다이얼로그 상태
     const [addCharDialogOpen, setAddCharDialogOpen] = useState(false);
@@ -105,6 +107,12 @@ export function PromptGenerator({ project, episodes = [], onProjectUpdate }: Pro
 
         if (selectedModel === 'grok') {
             // Grok용 프롬프트 - 트위터 친화적, 캐주얼한 톤
+            const matureNote = allowMature
+                ? `\n\n## 수위
+15금 정도까지 괜찮음. 로맨스 긴장감, 신체 접촉 묘사, 감정적으로 강렬한 장면 가능.
+단, 노골적인 성인 묘사는 ㄴㄴ. 암시와 여운으로 처리해줘.`
+                : '';
+
             prompt = `
 넌 트위터에서 2차 창작하는 작가의 브레인스토밍 파트너야.
 트위터 타래 감성 알지? 그 느낌으로 아이디어 던져줘. 밈이나 드립 섞어도 됨.
@@ -122,7 +130,7 @@ ${worldRuleDesc || '특별한 설정 없음'}
 ${charDescriptions}
 
 ## 현재 상황
-${context}
+${context}${matureNote}
 
 ## 해줘야 할 것
 1. 이 상황에서 터질 수 있는 전개 아이디어 3개 던져줘
@@ -410,19 +418,36 @@ ${context}
                             />
                         </div>
 
-                        <div className="flex gap-2">
-                            <Select value={selectedModel} onValueChange={(v) => setSelectedModel(v as AIModel)}>
-                                <SelectTrigger className="w-[140px]">
-                                    <SelectValue />
-                                </SelectTrigger>
-                                <SelectContent>
-                                    <SelectItem value="grok">🐦 Grok (X)</SelectItem>
-                                    <SelectItem value="claude">🤖 Claude/GPT</SelectItem>
-                                </SelectContent>
-                            </Select>
-                            <Button onClick={handleGenerate} className="flex-1">
-                                <Sparkles className="mr-2 h-4 w-4" /> 프롬프트 생성
-                            </Button>
+                        <div className="flex flex-col gap-2">
+                            <div className="flex gap-2">
+                                <Select value={selectedModel} onValueChange={(v) => setSelectedModel(v as AIModel)}>
+                                    <SelectTrigger className="w-[140px]">
+                                        <SelectValue />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                        <SelectItem value="grok">🐦 Grok (X)</SelectItem>
+                                        <SelectItem value="claude">🤖 Claude/GPT</SelectItem>
+                                    </SelectContent>
+                                </Select>
+                                <Button onClick={handleGenerate} className="flex-1">
+                                    <Sparkles className="mr-2 h-4 w-4" /> 프롬프트 생성
+                                </Button>
+                            </div>
+                            {selectedModel === 'grok' && (
+                                <div className="flex items-center space-x-2">
+                                    <Checkbox
+                                        id="allowMature"
+                                        checked={allowMature}
+                                        onCheckedChange={(checked) => setAllowMature(checked === true)}
+                                    />
+                                    <label
+                                        htmlFor="allowMature"
+                                        className="text-sm text-muted-foreground cursor-pointer"
+                                    >
+                                        🔞 15금 수위 허용 (로맨스 긴장감, 신체 접촉 묘사)
+                                    </label>
+                                </div>
+                            )}
                         </div>
                     </CardContent>
                 </Card>
