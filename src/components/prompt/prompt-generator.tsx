@@ -21,10 +21,16 @@ export function PromptGenerator({ project }: PromptGeneratorProps) {
 
     const originalWork = project.originalWork;
 
+    // 원작 캐릭터 + 커스텀 캐릭터 합치기
+    const allCharacters = [
+        ...(originalWork?.canonCharacters || []),
+        ...(project.customCharacters || []).map(c => ({ ...c, isCanon: false }))
+    ];
+
     const handleGenerate = () => {
         if (!originalWork) return;
 
-        const characters = originalWork.canonCharacters.filter(c => selectedActiveChars.includes(c.id));
+        const characters = allCharacters.filter(c => selectedActiveChars.includes(c.id));
 
         const worldRules = originalWork.worldRules || [];
         const worldRuleDesc = worldRules.map(r => `- ${r.title}: ${r.description}`).join('\n');
@@ -103,19 +109,26 @@ ${context}
                         <div className="space-y-2">
                             <Label>등장 인물 선택 (이번 장면에 나올 캐릭터)</Label>
                             <div className="flex flex-wrap gap-2">
-                                {originalWork.canonCharacters.map(char => {
-                                    const isActive = selectedActiveChars.includes(char.id);
-                                    return (
-                                        <Badge
-                                            key={char.id}
-                                            variant={isActive ? "default" : "outline"}
-                                            className="cursor-pointer hover:bg-primary/90"
-                                            onClick={() => toggleChar(char.id)}
-                                        >
-                                            {char.name}
-                                        </Badge>
-                                    );
-                                })}
+                                {allCharacters.length === 0 ? (
+                                    <p className="text-sm text-muted-foreground">
+                                        등록된 캐릭터가 없습니다. 프로젝트 설정에서 커스텀 캐릭터를 추가해주세요.
+                                    </p>
+                                ) : (
+                                    allCharacters.map(char => {
+                                        const isActive = selectedActiveChars.includes(char.id);
+                                        return (
+                                            <Badge
+                                                key={char.id}
+                                                variant={isActive ? "default" : "outline"}
+                                                className="cursor-pointer hover:bg-primary/90"
+                                                onClick={() => toggleChar(char.id)}
+                                            >
+                                                {char.name}
+                                                {!char.isCanon && <span className="ml-1 opacity-60">(OC)</span>}
+                                            </Badge>
+                                        );
+                                    })
+                                )}
                             </div>
                         </div>
 
