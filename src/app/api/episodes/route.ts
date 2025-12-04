@@ -46,6 +46,7 @@ export async function POST(request: Request) {
         const episode = await prisma.episode.create({
             data: {
                 title,
+                content: '', // 빈 내용으로 시작
                 projectId,
                 order: newOrder,
             },
