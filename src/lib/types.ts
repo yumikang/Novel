@@ -78,6 +78,7 @@ export interface EpisodeNote {
 export interface Episode {
   id: string;
   title: string;
+  content: string;       // 타래 전체 본문 (트윗들을 합친 연속된 텍스트)
   order: number;
   projectId: string;
   notes: EpisodeNote[];

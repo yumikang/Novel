@@ -3,7 +3,6 @@
 import { useState, useEffect } from 'react';
 import { Plus } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { ScrollArea } from '@/components/ui/scroll-area';
 import { NoteCard } from './note-card';
 import { Episode, EpisodeNote } from '@/lib/types';
 
@@ -81,27 +80,43 @@ export function EpisodeBoard({ episode, onUpdateEpisode }: EpisodeBoardProps) {
                 </Button>
             </div>
 
-            <ScrollArea className="flex-1 p-4">
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 pb-10">
-                    {notes.map(note => (
-                        <NoteCard
-                            key={note.id}
-                            note={note}
-                            onUpdate={handleUpdateNote}
-                            onDelete={handleDeleteNote}
-                        />
-                    ))}
-
-                    {notes.length === 0 && (
-                        <div className="col-span-full flex flex-col items-center justify-center py-20 text-slate-400 border-2 border-dashed rounded-lg">
-                            <p>작성된 메모가 없습니다.</p>
-                            <Button variant="link" onClick={handleAddNote}>
-                                첫 번째 메모를 추가해보세요
-                            </Button>
+            <div className="flex-1 overflow-y-auto p-4">
+                {/* 본문 영역 */}
+                {episode.content && (
+                    <div className="mb-6 p-6 bg-white rounded-lg border shadow-sm">
+                        <h3 className="text-sm font-semibold text-slate-700 mb-3">본문</h3>
+                        <div className="prose prose-slate max-w-none">
+                            <p className="whitespace-pre-wrap text-slate-900 leading-relaxed">
+                                {episode.content}
+                            </p>
                         </div>
-                    )}
+                    </div>
+                )}
+
+                {/* 메모 영역 */}
+                <div>
+                    <h3 className="text-sm font-semibold text-slate-700 mb-3">메모</h3>
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 pb-10">
+                        {notes.map(note => (
+                            <NoteCard
+                                key={note.id}
+                                note={note}
+                                onUpdate={handleUpdateNote}
+                                onDelete={handleDeleteNote}
+                            />
+                        ))}
+
+                        {notes.length === 0 && (
+                            <div className="col-span-full flex flex-col items-center justify-center py-20 text-slate-400 border-2 border-dashed rounded-lg">
+                                <p>작성된 메모가 없습니다.</p>
+                                <Button variant="link" onClick={handleAddNote}>
+                                    첫 번째 메모를 추가해보세요
+                                </Button>
+                            </div>
+                        )}
+                    </div>
                 </div>
-            </ScrollArea>
+            </div>
         </div>
     );
 }

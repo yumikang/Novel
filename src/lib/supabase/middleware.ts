@@ -37,6 +37,11 @@ export async function updateSession(request: NextRequest) {
         data: { user },
     } = await supabase.auth.getUser()
 
+    // 개발 환경에서는 인증 체크 임시 비활성화 (ThreadSaver 통합 테스트용)
+    if (process.env.NODE_ENV === 'development') {
+        return response
+    }
+
     if (
         !user &&
         !request.nextUrl.pathname.startsWith('/login') &&
